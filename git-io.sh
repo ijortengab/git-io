@@ -179,9 +179,9 @@ until [[ $finish == 1 ]]; do
     fi
 done
 if [ -z "$custom" ];then
-    command_string='curl https://git.io/ -i -F "url=$github_url"'
+    command_string='curl -s https://git.io/ -i -F "url=$github_url"'
 else
-    command_string='curl https://git.io/ -i -F "url=$github_url" -F "code=$custom"'
+    command_string='curl -s https://git.io/ -i -F "url=$github_url" -F "code=$custom"'
     command_string=$(echo "$command_string" | sed "s|"'$custom'"|$custom|g")
 fi
 command_string=$(echo "$command_string" | sed "s|"'$github_url'"|$github_url|g")
@@ -192,4 +192,12 @@ echo -e "\e[32m""Option:""\e[39m"
 echo -e " ""\e[35m""[""\e[33m"Ctrl+c"\e[35m""]""\e[39m"" Cancel"
 echo -e " ""\e[35m""[""\e[33m"Enter "\e[35m""]""\e[39m"" Execute"
 read -rsn1 -p $'\e[32m'"Select: "$'\e[39m' option
-[ -z "$option" ] && echo "$command_string" | sh
+echo
+[ -z "$option" ] && \
+    debug=$(echo "$command_string" | sh 2>&1) && \
+    echo "$debug" >&2 &&\
+    newlink=$(echo "$debug" | grep -o "^Location: .*$" | sed -E "s|^Location: (.*)$|\1|")
+if [ -n "$newlink" ];then
+    echo -e "\e[33m$newlink\e[35m"
+    command -v clip.exe >/dev/null && echo -n "$newlink" | clip.exe && echo -e "\e[36m""Copied current value to Clipboard.""\e[33m"
+fi
